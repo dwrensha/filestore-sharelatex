@@ -116,34 +116,4 @@ app.get "/health_check", (req, res)->
 app.get '*', (req, res)->
 	res.send 404
 
-server = require('http').createServer(app)
-port = settings.internal.filestore.port or 3009
-host = settings.internal.filestore.host or "localhost"
-
-beginShutdown = () ->
-	if appIsOk
-		appIsOk = false
-		# hard-terminate this process if graceful shutdown fails
-		killTimer = setTimeout () ->
-			process.exit 1
-		, 120*1000
-		killTimer.unref?() # prevent timer from keeping process alive
-		server.close () ->
-			logger.log "closed all connections"
-			Metrics.close()
-			process.disconnect?()
-		logger.log "server will stop accepting connections"
-
-server.listen port, host, ->
-	logger.info "Filestore starting up, listening on #{host}:#{port}"
-
-process.on 'SIGTERM', () ->
-	logger.log("filestore got SIGTERM, shutting down gracefully")
-	beginShutdown()
-
-if global.gc?
-	gcTimer = setInterval () ->
-		global.gc()
-		logger.log process.memoryUsage(), "global.gc"
-	, 3 * oneMinute = 60 * 1000
-	gcTimer.unref()
+module.exports = {app:app}
